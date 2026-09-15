@@ -1,0 +1,11 @@
+{
+  "id": "future",
+  "version": 2,
+  "title": "Forward compatibility",
+  "children": [
+    { "type": "statusRow", "icon": "✅", "label": "Known elements still render", "value": "ok", "tone": "ok" },
+    { "type": "carousel", "items": [{ "title": "Something new in spec v3" }] },
+    { "type": "text", "text": "Unknown elements above must degrade to a caption, never crash.", "style": "caption" },
+    { "type": "text", "text": "Unknown tone below must fall back to neutral.", "tone": "chartreuse" }
+  ]
+}

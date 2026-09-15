@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0e14'/%3E%3Crect x='6' y='6' width='20' height='4' rx='2' fill='%230a84ff'/%3E%3Crect x='6' y='14' width='14' height='3' rx='1.5' fill='%2334c759'/%3E%3Crect x='6' y='20' width='17' height='3' rx='1.5' fill='%23ffb340'/%3E%3C/svg%3E">
+<title>Slate — the home-screen surface where your agent asks and answers</title>
+<meta name="description" content="Slate v2: a declarative Android home-screen widget for AI agents. Push status, ask questions with canned answers, read the replies. Self-hosted, tiny, agent-agnostic.">
+<style>
+  :root{
+    --bg:#0b0e14; --bg2:#10141d; --card:#141926; --card2:#181e2c;
+    --line:#232b3d; --text:#e8ecf4; --muted:#93a0b8; --faint:#5b6a85;
+    --accent:#0a84ff; --accent2:#5ac8fa;
+    --ok:#34c759; --warn:#ffb340; --error:#ff5d55; --info:#64aefc; --neutral:#8e8e93;
+    --code-bg:#0d1119; --radius:12px;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:#1a2130;border:1px solid var(--line);border-radius:5px;padding:.1em .38em;color:#c8d6f0}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.6;position:relative}
+  pre code{background:none;border:none;padding:0;color:#c8d6f0;font-size:13.5px}
+  .wrap{display:flex;max-width:1280px;margin:0 auto;gap:40px;padding:0 28px}
+  /* sidebar */
+  aside{position:sticky;top:0;height:100vh;width:236px;flex-shrink:0;padding:36px 0 40px;overflow-y:auto}
+  aside .brand{font-weight:800;font-size:19px;letter-spacing:-.3px;margin-bottom:4px;display:flex;align-items:center;gap:9px}
+  aside .brand .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--accent) 0%,var(--ok) 100%);display:inline-block}
+  aside .ver{color:var(--faint);font-size:12px;margin-bottom:26px;font-family:var(--mono)}
+  aside nav a{display:block;color:var(--muted);padding:5.5px 12px;border-radius:8px;font-size:14px;border-left:2px solid transparent}
+  aside nav a:hover{color:var(--text);background:#161c2a;text-decoration:none}
+  aside nav a.active{color:var(--text);border-left-color:var(--accent);background:#141b2b}
+  aside nav .sep{margin:16px 0 8px 12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  /* main */
+  main{flex:1;min-width:0;padding:0 0 120px;max-width:880px}
+  section{padding-top:44px;scroll-margin-top:20px}
+  h1{font-size:40px;letter-spacing:-1.2px;line-height:1.12;font-weight:800}
+  h2{font-size:27px;letter-spacing:-.5px;font-weight:750;margin-bottom:8px;padding-top:8px}
+  h3{font-size:18px;font-weight:700;margin:26px 0 8px}
+  .lede{color:var(--muted);font-size:18px;max-width:640px;margin-top:14px}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11.5px;background:#152033;color:var(--accent2);border:1px solid #22344f;border-radius:999px;padding:3px 11px;margin-right:6px;vertical-align:middle}
+  /* hero */
+  .hero{padding:64px 0 8px}
+  .hero .badges{margin-bottom:18px}
+  .hero p.lede{font-size:19px}
+  .cta{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:11px 22px;border-radius:10px;font-weight:650;font-size:15px;border:1px solid var(--line)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+  .btn.primary:hover{background:#2e94ff;text-decoration:none}
+  .btn.ghost{color:var(--text);background:var(--card)}
+  .btn.ghost:hover{background:var(--card2);text-decoration:none}
+  /* cards & grids */
+  .grid{display:grid;gap:16px;margin-top:20px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h4{font-size:15.5px;margin-bottom:6px;font-weight:700}
+  .card p{color:var(--muted);font-size:14px}
+  .card .ico{font-size:22px;margin-bottom:10px;display:block}
+  /* screenshots */
+  .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+  .shot{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .shot img{width:100%;display:block}
+  .shot figcaption{padding:10px 14px;font-size:13px;color:var(--muted)}
+  .shot.wide{grid-column:span 3;display:grid;grid-template-columns:1fr 1fr 1fr}
+  .shot.wide img{height:100%;object-fit:cover}
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:14px;background:var(--card);border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg2);color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:650}
+  tr:last-child td{border-bottom:none}
+  td code{white-space:nowrap}
+  .tone{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .tone i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  /* element reference */
+  .el{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-top:16px;overflow:hidden}
+  .el .head{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--card2);border-bottom:1px solid var(--line)}
+  .el .head .nm{font-family:var(--mono);font-weight:700;color:var(--accent2);font-size:15px}
+  .el .head .ds{color:var(--muted);font-size:13.5px}
+  .el .body{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .el .body pre{margin:0;font-size:12.5px}
+  .el .props{font-size:13px}
+  .el .props table{margin:0}
+  .el .props th,.el .props td{padding:6px 10px;font-size:12.5px}
+  .req{color:var(--warn);font-size:10.5px;font-family:var(--mono);border:1px solid #4a3a1e;background:#241d10;border-radius:4px;padding:0 5px;margin-left:4px}
+  .dflt{color:var(--faint)}
+  /* copy button */
+  .copy{position:absolute;top:8px;right:8px;background:#1c2434;border:1px solid var(--line);color:var(--muted);border-radius:6px;font-size:11px;padding:3px 9px;cursor:pointer;opacity:0;transition:opacity .15s}
+  pre:hover .copy{opacity:1}
+  .copy:hover{color:var(--text)}
+  /* callout */
+  .note{background:#101a2a;border:1px solid #1d3350;border-left:3px solid var(--accent);border-radius:10px;padding:13px 18px;margin:16px 0;color:var(--muted);font-size:14.5px}
+  .note.warn{border-left-color:var(--warn);background:#1d1810;border-color:#4a3a1e}
+  /* steps */
+  .steps{counter-reset:st;margin-top:20px}
+  .step{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .step::before{counter-increment:st;content:counter(st);flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:750;color:var(--accent2);font-family:var(--mono);font-size:14px}
+  .step h4{font-size:15.5px;margin-bottom:4px}
+  .step p{color:var(--muted);font-size:14.5px}
+  .step code,.step pre{margin:8px 0 0}
+  /* metric strip */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:center}
+  .metric b{font-size:24px;font-family:var(--mono);color:var(--accent2);display:block;letter-spacing:-.5px}
+  .metric span{color:var(--muted);font-size:12.5px}
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:36px 28px;color:var(--faint);font-size:13.5px;text-align:center;margin-top:60px}
+  @media (max-width:960px){
+    aside{display:none}
+    .wrap{padding:0 20px}
+    .g2,.g3{grid-template-columns:1fr}
+    .shots{grid-template-columns:1fr}
+    .shot.wide{grid-column:span 1;grid-template-columns:1fr}
+    .metrics{grid-template-columns:1fr 1fr}
+    .el .body{grid-template-columns:1fr}
+    h1{font-size:31px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<aside>
+  <div class="brand"><span class="dot"></span>Slate</div>
+  <div class="ver">v2.0.0-alpha.1</div>
+  <nav id="nav">
+    <a href="#intro">Introduction</a>
+    <a href="#loops">The three loops</a>
+    <a href="#screens">Screenshots</a>
+    <div class="sep">Getting started</div>
+    <a href="#start-backend">1 · Backend</a>
+    <a href="#start-phone">2 · Phone</a>
+    <a href="#start-agent">3 · Agent</a>
+    <div class="sep">Reference</div>
+    <a href="#features">Features</a>
+    <a href="#envelope">The slate envelope</a>
+    <a href="#tones">Tones</a>
+    <a href="#elements">Element reference</a>
+    <a href="#interactions">Interactions</a>
+    <a href="#examples">Examples</a>
+    <a href="#api">HTTP API</a>
+    <div class="sep">Project</div>
+    <a href="#quality">Quality</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#agent-setup">Agent setup prompt</a>
+  </nav>
+</aside>
+
+<main>
+<!-- ===================== HERO ===================== -->
+<div class="hero">
+  <div class="badges">
+    <span class="pill">self-hosted</span><span class="pill">agent-agnostic</span><span class="pill">Android 12+</span><span class="pill">SQLite</span><span class="pill">MIT</span>
+  </div>
+  <h1>The home-screen surface<br>where your agent <span style="color:var(--accent2)">asks</span> and <span style="color:var(--ok)">answers</span>.</h1>
+  <p class="lede">Slate is a declarative Android home-screen widget for AI agents. Your agent pushes a tiny JSON document to your own backend; the widget renders it; your taps flow back. Status boards. Questions with canned answers. One round trip — no chat window, no blocking.</p>
+  <div class="cta">
+    <a class="btn primary" href="#start-backend">Get started</a>
+    <a class="btn ghost" href="#elements">Syntax reference</a>
+    <a class="btn ghost" href="#examples">Examples</a>
+  </div>
+  <div class="metrics">
+    <div class="metric"><b>9</b><span>element types — the whole language</span></div>
+    <div class="metric"><b>&lt;2 min</b><span>cold start → live status board (measured)</span></div>
+    <div class="metric"><b>75s</b><span>question → answer → loop closed (measured)</span></div>
+    <div class="metric"><b>80%+</b><span>branch coverage, enforced on both sides</span></div>
+  </div>
+</div>
+
+<!-- ===================== INTRO ===================== -->
+<section id="intro">
+  <h2>What is Slate?</h2>
+  <p class="lede">A home-screen widget your AI agent can draw on — and read back. OpenClaw crons report home-assistant status, email, backups and security. When a job needs a human decision, the agent puts the question <em>on your phone</em> with canned answers. You tap. The agent picks the answer up on its next poll — or gets woken by a signed webhook.</p>
+  <div class="grid g3" style="margin-top:24px">
+    <div class="card"><span class="ico">📱</span><h4>Declarative widget</h4><p>Agents declare content and tone — never colors or geometry. Nine element types render natively on the home screen at three size buckets.</p></div>
+    <div class="card"><span class="ico">❓</span><h4>Questions, not notifications</h4><p>First-class question element with 2–6 canned answers, free-text follow-up, expiry. The chosen answer comes back tagged with question, option and label.</p></div>
+    <div class="card"><span class="ico">🏠</span><h4>Self-hosted &amp; tiny</h4><p>A Bun + Elysia + SQLite service on your LAN. One API key, no cloud relay, no accounts. Any agent that can curl can use it — OpenClaw, Hermes, your scripts.</p></div>
+  </div>
+</section>
+
+<!-- ===================== LOOPS ===================== -->
+<section id="loops">
+  <h2>The three loops</h2>
+  <p class="lede">Everything Slate does is one of these. All three are verified end-to-end — including with a live OpenClaw instance driving the API.</p>
+
+  <h3 style="margin-top:24px">A · Status push</h3>
+  <p style="color:var(--muted);font-size:15px">A cron finishes → pushes the nightly board → the widget renders it with tone accents. Nothing to poll; nothing blocks.</p>
+
+  <h3 style="margin-top:20px">B · Question with canned answers</h3>
+  <p style="color:var(--muted);font-size:15px">The agent needs a decision: it pushes a question with 2–6 buttons. You tap one <em>on the widget</em>. The answer lands in the agent's feed tagged with <code>questionId</code>, <code>optionId</code> and a human-readable <code>optionLabel</code> — no lookup tables. The agent closes the loop by turning the question into a status row. <strong>You can see it acted.</strong></p>
+
+  <h3 style="margin-top:20px">C · Free text</h3>
+  <p style="color:var(--muted);font-size:15px">Set <code>allowText: true</code> and the widget shows a "reply in app" row — Android widgets physically cannot host text fields, so the tap-through opens the companion app where you type. The reply arrives as <code>kind: "text"</code>.</p>
+
+  <div class="note">⚙️ <strong>Rule zero, learned the hard way:</strong> agents must <em>never</em> block waiting for an answer. Push, then end your turn. Pick the answer up on a later poll or webhook wake — blocking on a question is exactly the failure mode Slate replaces.</div>
+</section>
+
+<!-- ===================== SCREENSHOTS ===================== -->
+<section id="screens">
+  <h2>Screenshots</h2>
+  <p class="lede">Real captures from the v2 build running on an Android 12 emulator, answering a live question.</p>
+  <div class="shots">
+    <figure class="shot"><img src="shots/02_widget_question.png" alt="Home screen widget rendering a status board and a question with buttons" loading="lazy"><figcaption><strong>The widget.</strong> Tone accent, freshness, tone-colored values, and a question with buttons — answerable in one tap from the couch.</figcaption></figure>
+    <figure class="shot"><img src="shots/widget_answered.png" alt="Widget in the answered state: chosen option with green check, sibling faded" loading="lazy"><figcaption><strong>Answered state.</strong> The chosen option becomes "✓ &lt;your answer&gt;" in green; siblings fade. No chips, no doubt.</figcaption></figure>
+    <figure class="shot"><img src="shots/03_slate_list.png" alt="Companion app listing slates with tone accents and a question badge" loading="lazy"><figcaption><strong>The app.</strong> Every slate as a card — tone stripe, freshness, and a "1 question" badge that tells you where you're needed.</figcaption></figure>
+    <figure class="shot"><img src="shots/04_question_detail.png" alt="Slate detail screen with widget preview and native question controls" loading="lazy"><figcaption><strong>Detail.</strong> A pixel-true preview of the widget (size switchable) plus native controls for answering — including free text.</figcaption></figure>
+    <figure class="shot"><img src="shots/06_answered.png" alt="App showing the answered state with delivery confirmation" loading="lazy"><figcaption><strong>Delivery, legibly.</strong> "✓ Sent to agent: &lt;answer&gt;" — one human sentence, not transport debug.</figcaption></figure>
+    <figure class="shot"><img src="shots/01_setup.png" alt="Setup screen with server URL and API key fields" loading="lazy"><figcaption><strong>Setup once.</strong> Two lines from whoever runs your agent, one tap on Test, done.</figcaption></figure>
+  </div>
+</section>
+
+<!-- ===================== GETTING STARTED ===================== -->
+<section id="start-backend">
+  <h2>Getting started · 1 — the backend</h2>
+  <p class="lede">One service, one SQLite file, one API key. Runs anywhere Bun runs; ships with a Dockerfile.</p>
+  <div class="steps">
+    <div class="step">
+      <div>
+        <h4>Run it</h4>
+        <pre><code>git clone https://github.com/NickLewanowicz/slate.git
+cd openclaw-widget-android/backend
+bun install
+SLATE_API_KEY=$(openssl rand -hex 24) bun run src/index.ts</code></pre>
+        <p style="color:var(--faint);font-size:13px">Docker instead: <code>cd backend && cp .env.example .env</code> (set <code>SLATE_API_KEY</code>) then <code>docker compose up -d --build</code>. All config is environment variables:
+
+<table style="margin-top:12px">
+  <tr><th>Variable</th><th>Default</th><th>Purpose</th></tr>
+  <tr><td><code>SLATE_API_KEY</code></td><td>— (required)</td><td>The single shared key; boot fails without it</td></tr>
+  <tr><td><code>SLATE_PORT</code></td><td>3000</td><td>Listen port</td></tr>
+  <tr><td><code>SLATE_DB_PATH</code></td><td><code>./data/slate.db</code></td><td>SQLite file (single file — back it up by copying)</td></tr>
+  <tr><td><code>SLATE_WEBHOOK_URL</code></td><td>unset</td><td>Optional wake endpoint (HMAC-signed POST per interaction)</td></tr>
+  <tr><td><code>SLATE_WEBHOOK_SECRET</code></td><td>unset</td><td>Enables the <code>X-Slate-Signature</code> header</td></tr>
+  <tr><td><code>SLATE_MAX_RESPONSES_PER_SLATE</code></td><td>200</td><td>Answers kept per slate (oldest trimmed)</td></tr>
+  <tr><td><code>SLATE_RESPONSE_TTL_HOURS</code></td><td>168</td><td>Answer retention (default 7 days)</td></tr>
+  <tr><td><code>SLATE_LOG_LEVEL</code></td><td>info</td><td>Logging verbosity</td></tr>
+</table>
+<p style="color:var(--warn);font-size:13px;margin-top:8px">⚠️ Slate is designed for <strong>trusted LANs only — do not expose it to the internet</strong>. Terminate TLS in a reverse proxy if you must reach it remotely, and keep port 3000 firewalled.</p></p>
+      </div>
+    </div>
+    <div class="step">
+      <div>
+        <h4>Push your first slate</h4>
+        <pre><code>curl -X PUT http://localhost:3000/api/slates/home \
+  -H "Authorization: Bearer $SLATE_API_KEY" \
+  -H "Content-Type: application/json" -d '{
+  "id": "home", "version": 2, "title": "🏠 Home", "tone": "info",
+  "children": [
+    { "type": "statusRow", "icon": "🏠", "label": "Home Assistant", "value": "ok", "tone": "ok" },
+    { "type": "statusRow", "icon": "💾", "label": "Backup", "value": "ok", "tone": "ok", "detail": "finished 02:00" }
+  ]
+}'</code></pre>
+        <p style="color:var(--faint);font-size:13px">Full replace, idempotent by content: re-pushing an identical spec costs the device a free <code>304</code>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div>
+        <h4>Verify</h4>
+        <pre><code>curl http://localhost:3000/health           # → {"status":"ok"}
+curl http://localhost:3000/api/ping -H "Authorization: Bearer $SLATE_API_KEY"</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="start-phone">
+  <h2>Getting started · 2 — the phone</h2>
+  <div class="steps">
+    <div class="step"><div>
+      <h4>Install the app (Android 12+)</h4>
+      <p>Sideload the debug APK from CI, or build it: <code>./gradlew :app:assembleDebug</code> → <code>app/build/outputs/apk/debug/app-debug.apk</code>.</p>
+    </div></div>
+    <div class="step"><div>
+      <h4>Pair it</h4>
+      <p>Enter the backend URL and API key (they come from whoever runs the agent), tap <strong>Test connection</strong> → "Connected ✓ · 2.0.0", then <strong>Save &amp; open Slate</strong>.</p>
+    </div></div>
+    <div class="step"><div>
+      <h4>Add the widget</h4>
+      <p>Long-press your launcher → Widgets → <strong>Slate</strong> — or tap the 📱 pin action in the app's slate list. The widget binds to the slate <code>home</code> and re-renders across three size buckets as you resize it.</p>
+    </div></div>
+  </div>
+</section>
+
+<section id="start-agent">
+  <h2>Getting started · 3 — the agent</h2>
+  <p class="lede">Copy <code>skill/slate/</code> into your agent's skills directory (for OpenClaw: <code>~/.openclaw/skills/</code>). The skill ships a <code>SKILL.md</code> written for LLM consumption and a <code>slate.sh</code> CLI with local validation, honest exit codes and error hints that tell the agent how to fix its own payload.</p>
+  <pre><code>export SLATE_URL=http://slate-host:3000
+export SLATE_API_KEY=…        # the same key the backend was started with
+
+slate.sh ping                          # verify reachability + auth
+slate.sh validate examples/home-board.json   # offline pre-check — "cheaper than a 400"
+slate.sh push examples/home-board.json home  # create/update — the widget binds the slate "home"
+slate.sh responses home                # new answers since the cursor
+slate.sh ack home "$CURSOR"            # after processing — nothing re-delivered</code></pre>
+  <p style="color:var(--faint);font-size:13px">Subcommands: also <code>get</code>, <code>list</code>, <code>delete</code>, <code>clear-responses</code>. Exit codes: 0 ok · 2 config · 3 network · 4 API error (hint printed) · 5 validation failed.</p>
+  <div class="note">🧠 The skill codifies <strong>Rule zero</strong> (never block waiting), the poll→ack loop, and loop closure — "the question becomes a status row; always do it". That's why the widget feels alive instead of dropped.</div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section id="features">
+  <h2>Features</h2>
+  <div class="grid g2">
+    <div class="card"><span class="ico">🎚️</span><h4>Semantic tones, never hex</h4><p>Agents say <code>tone: "warn"</code>, never colors. Five tones drive accent bars, value colors, the header traffic light and option styling — with on-light variants that pass WCAG contrast.</p></div>
+    <div class="card"><span class="ico">📐</span><h4>Three size buckets</h4><p>Compact (≤230dp) is a digest; medium adds the first question; full renders everything with fixed-height ListView todos. Re-renders live as you resize.</p></div>
+    <div class="card"><span class="ico">✈️</span><h4>Offline-first</h4><p>The widget renders from cache — a downed server dims the dot, never blanks the screen. Taps queue durably (JSON, not pipe strings) and flush with backoff; dedupe by <code>seq</code>.</p></div>
+    <div class="card"><span class="ico">🔁</span><h4>Free-sync pushes</h4><p>Content-hash ETags: an identical re-push costs the device nothing (a real 304). The hash covers agent content only; <code>updatedAt</code> is server-owned so clocks can't poison it.</p></div>
+    <div class="card"><span class="ico">🔔</span><h4>Webhook wake</h4><p>Optional: every interaction POSTs to your gateway, HMAC-signed (<code>X-Slate-Signature</code>), retried 2s/8s/30s. Polling remains the source of truth; the wake just cuts latency.</p></div>
+    <div class="card"><span class="ico">🛡️</span><h4>Hardened by attack</h4><p>Constant-time key check, no pre-auth oracles, parameterized SQL, all-or-nothing batches, depth/size caps enforced <em>before</em> validation (a 1 KB nesting bomb can't wedge the server), 64 KB spec limit.</p></div>
+    <div class="card"><span class="ico">🧾</span><h4>LLM-first errors</h4><p>Every 400 carries a <code>hint</code>: valid values, the closest guess, a corrected snippet. Unknown content is rejected at push time so agents catch typos — and degraded to a caption on-device so old apps never crash.</p></div>
+    <div class="card"><span class="ico">🤝</span><h4>Agent-agnostic</h4><p>The contract is plain HTTP + JSON with a per-slate event feed. OpenClaw uses the bundled skill; Hermes (or anything with curl) uses <code>docs/API_EXAMPLES.md</code>.</p></div>
+  </div>
+</section>
+
+<!-- ===================== ENVELOPE ===================== -->
+<section id="envelope">
+  <h2>The slate envelope</h2>
+  <p class="lede">A slate is one JSON document. Required: <code>id</code>, <code>version: 2</code>, <code>children</code>. Everything else has defaults — three lines of JSON renders fine.</p>
+  <pre><code>{
+  "id": "nightly",                 <span class="c">// stable slug — echoed in every interaction</span>
+  "version": 2,                    <span class="c">// exactly 2 (GET /api/ping advertises support)</span>
+  "title": "🌙 Nightly",
+  "tone": "warn",                  <span class="c">// surface accent + aggregate traffic light</span>
+  "expiresAt": "2026-09-15T09:00:00Z", <span class="c">// optional; late answers flagged stale</span>
+  "children": [ <span class="c">…up to 60 elements, ≤12 per container, depth ≤6…</span> ]
+}</code></pre>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Req</th><th>Notes</th></tr>
+    <tr><td><code>id</code></td><td>slug</td><td><span class="req">req</span></td><td><code>^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,39}$</code> — stable across pushes; the widget binds <code>home</code></td></tr>
+    <tr><td><code>version</code></td><td>2</td><td><span class="req">req</span></td><td>Integer const. Additive evolution = new optional props; breaking bumps to 3</td></tr>
+    <tr><td><code>title</code></td><td>string ≤60</td><td></td><td>Header line</td></tr>
+    <tr><td><code>tone</code></td><td>tone</td><td></td><td>Default <code>neutral</code>. Colors the accent bar and aggregate dot</td></tr>
+    <tr><td><code>updatedAt</code></td><td>date-time</td><td></td><td><strong>Server-stamped — don't send it</strong> (it's overwritten and excluded from the content hash)</td></tr>
+    <tr><td><code>expiresAt</code></td><td>date-time</td><td></td><td>Surface-level. Past it: greyed "stale" treatment; late answers still recorded, flagged <code>stale</code></td></tr>
+    <tr><td><code>children</code></td><td>element[]</td><td><span class="req">req</span></td><td>≤12 per container, ≤60 total, depth ≤6, 64 KB serialized</td></tr>
+  </table>
+  <div class="note"><strong>The two-layer contract</strong> — Slate's most important design rule: the <strong>backend is strict</strong> (unknown elements, props, tones and non-2 versions are rejected with a fix-it hint, so agents catch typos at push time), while the <strong>renderer is lenient</strong> (unknown content degrades to a caption on-device, so an old app never crashes on a new spec). Strict for senders, lenient for receivers.</div>
+</section>
+
+<!-- ===================== TONES ===================== -->
+<section id="tones">
+  <h2>Tones</h2>
+  <p class="lede">Semantic, never visual. Raw colors are rejected at push time so agents can't ship unreadable palettes — the renderer owns contrast (on-light variants are WCAG-checked).</p>
+  <table>
+    <tr><th>Tone</th><th>Means</th><th>Use for</th></tr>
+    <tr><td><span class="tone"><i style="background:var(--ok)"></i><code>ok</code></span></td><td>Healthy / done</td><td>Passed checks, completed backups, confirmed actions</td></tr>
+    <tr><td><span class="tone"><i style="background:var(--warn)"></i><code>warn</code></span></td><td>Needs attention soon</td><td>Disk filling up, expiring certs, "orange-ish emphasis"</td></tr>
+    <tr><td><span class="tone"><i style="background:var(--error)"></i><code>error</code></span></td><td>Failed / needs you now</td><td>Failed jobs, open doors, red everywhere is allowed — but mean it</td></tr>
+    <tr><td><span class="tone"><i style="background:var(--info)"></i><code>info</code></span></td><td>Neutral signal</td><td>Calendar, counts, purely informational state</td></tr>
+    <tr><td><span class="tone"><i style="background:var(--neutral)"></i><code>neutral</code></span></td><td>No judgment (default)</td><td>Everything else</td></tr>
+  </table>
+  <p style="color:var(--muted);font-size:14.5px">Icons are emoji or single glyphs (<code>"🏠"</code>) — never font names, never drawable ids. The surface <code>tone</code> colors the header rule; the header dot shows the <strong>aggregate</strong> (worst) tone of all rows.</p>
+</section>
+
+<!-- ===================== ELEMENTS ===================== -->
+<section id="elements">
+  <h2>Element reference</h2>
+  <p class="lede">Nine types. Everything has sane defaults: a <code>type</code> plus one content field renders fine. Interactive elements are marked — everything else opens the app on tap.</p>
+
+  <div class="el"><div class="head"><span class="nm">statusRow</span><span class="ds">THE status line: service + state. The reason Slate exists.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>label <span class="req">req</span></td><td>string ≤80</td><td>—</td></tr>
+        <tr><td>icon</td><td>≤4 chars (emoji)</td><td>•</td></tr>
+        <tr><td>value</td><td>string ≤80</td><td>— right-aligned, tone-colored</td></tr>
+        <tr><td>detail</td><td>string ≤160</td><td>— second caption line</td></tr>
+        <tr><td>tone</td><td>tone</td><td>neutral</td></tr>
+      </table></div>
+      <pre><code>{ "type": "statusRow", "icon": "💾",
+  "label": "Backup",
+  "value": "failed",
+  "tone": "error",
+  "detail": "disk full — 412 GB used" }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">question</span><span class="ds">Interactive — canned answers that carry questionId + optionId back to the agent.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>id <span class="req">req</span></td><td>slug</td><td>— echoed in every answer</td></tr>
+        <tr><td>prompt <span class="req">req</span></td><td>string ≤300</td><td>—</td></tr>
+        <tr><td>options <span class="req">req</span></td><td>2–6 × {id, label ≤40, style}</td><td>style: quiet</td></tr>
+        <tr><td>allowText</td><td>bool</td><td>false — adds free-text via app</td></tr>
+        <tr><td>placeholder</td><td>string ≤80</td><td>"Type a reply…" (app-only)</td></tr>
+      </table></div>
+      <pre><code>{ "type": "question", "id": "q-backup",
+  "prompt": "Backup disk is full. Purge?",
+  "options": [
+    { "id": "purge", "label": "Purge", "style": "primary" },
+    { "id": "skip",  "label": "Skip tonight" },
+    { "id": "mute",  "label": "Never ask again", "style": "danger" } ],
+  "allowText": true }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">todoList</span><span class="ds">Interactive — checkable rows; the server owns <code>checked</code>.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>id <span class="req">req</span></td><td>slug</td><td>— echoed in check/uncheck</td></tr>
+        <tr><td>items <span class="req">req</span></td><td>1–12 × {id, label ≤120, checked, tone}</td><td>checked: false</td></tr>
+      </table></div>
+      <pre><code>{ "type": "todoList", "id": "bed",
+  "items": [
+    { "id": "doors",  "label": "Lock doors", "checked": true },
+    { "id": "garage", "label": "Close garage" } ] }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">text</span><span class="ds">Prose, headings, captions.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>text <span class="req">req</span></td><td>string ≤500</td><td>—</td></tr>
+        <tr><td>style</td><td>title | heading | body | caption</td><td>body</td></tr>
+        <tr><td>tone</td><td>tone</td><td>neutral</td></tr>
+        <tr><td>maxLines</td><td>1–10</td><td>per style</td></tr>
+      </table></div>
+      <pre><code>{ "type": "text", "style": "heading",
+  "text": "Before bed" }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">column / row</span><span class="ds">Containers. ≤12 children each; depth ≤6.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>children <span class="req">req</span></td><td>element[] ≤12</td><td>—</td></tr>
+        <tr><td>gap</td><td>0–24 dp</td><td>8</td></tr>
+        <tr><td>padding (column)</td><td>0–24 dp</td><td>0 (root: 16)</td></tr>
+        <tr><td>align (column)</td><td>start | center | end</td><td>start</td></tr>
+        <tr><td>gravity (row)</td><td>start | center | end | spaceBetween</td><td>start</td></tr>
+      </table></div>
+      <pre><code>{ "type": "row", "gravity": "spaceBetween",
+  "children": [
+    { "type": "text", "text": "left" },
+    { "type": "text", "text": "right", "tone": "info" } ] }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">progress</span><span class="ds">Percent bar or indeterminate spinner.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>value</td><td>0–100</td><td>required unless indeterminate</td></tr>
+        <tr><td>indeterminate</td><td>bool</td><td>false</td></tr>
+        <tr><td>label</td><td>string ≤80</td><td>—</td></tr>
+        <tr><td>tone</td><td>tone</td><td>neutral</td></tr>
+      </table></div>
+      <pre><code>{ "type": "progress", "value": 64,
+  "label": "Migration", "tone": "info" }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">divider</span><span class="ds">Separator.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type</th><th>Default</th></tr>
+        <tr><td>inset</td><td>bool</td><td>false</td></tr>
+      </table></div>
+      <pre><code>{ "type": "divider", "inset": true }</code></pre>
+    </div>
+  </div>
+
+  <div class="el"><div class="head"><span class="nm">spacer</span><span class="ds">Breathing room.</span></div>
+    <div class="body">
+      <div class="props"><table>
+        <tr><th>Prop</th><th>Type / range</th><th>Default</th></tr>
+        <tr><td>height</td><td>2–48 dp</td><td>8</td></tr>
+      </table></div>
+      <pre><code>{ "type": "spacer", "height": 16 }</code></pre>
+    </div>
+  </div>
+
+  <div class="note warn">✋ <strong>Anti-patterns, all rejected at push time:</strong> raw colors (say <code>tone: "error"</code>), font/drawable icon names (use emoji), unstable ids (timestamps in ids break user state), PATCHing (doesn't exist — full replace), unknown props (<code>additionalProperties: false</code> catches typos with a fix-it hint).</div>
+</section>
+
+<!-- ===================== INTERACTIONS ===================== -->
+<section id="interactions">
+  <h2>Interactions — how taps come back</h2>
+  <p class="lede">Interactive elements: <code>question</code> options and <code>todoList</code> rows. Everything else deep-links into the app. Taps are queued durably on-device, flushed in batches, and deduped server-side by <code>seq</code> (per slate).</p>
+  <pre><code>POST /api/device/interactions
+{ "interactions": [
+  { "seq": "0c9f…uuid",            <span class="c">// idempotency key — never reuse after a 2xx</span>
+    "slateId": "nightly",
+    "kind": "answer",              <span class="c">// answer | check | uncheck | text | tap</span>
+    "elementId": "q-backup",
+    "questionId": "q-backup",
+    "optionId": "purge",
+    "optionLabel": "Purge",        <span class="c">// convenience echo — no lookup needed</span>
+    "clientAt": "2026-09-15T23:17:02Z" } ] }
+
+→ 202 { "accepted": 1, "duplicate": 0 }</code></pre>
+  <table>
+    <tr><th>kind</th><th>Carries</th><th>Side effect</th></tr>
+    <tr><td><code>answer</code></td><td>questionId, optionId, optionLabel</td><td>Recorded in the agent feed; device marks the question answered</td></tr>
+    <tr><td><code>text</code></td><td>questionId, value ≤1000</td><td>Recorded; free-text reply</td></tr>
+    <tr><td><code>check / uncheck</code></td><td>elementId (list), itemId</td><td>Recorded <strong>and mutates the stored spec</strong> — server owns todo truth</td></tr>
+    <tr><td><code>tap</code></td><td>elementId</td><td>Generic signal</td></tr>
+  </table>
+  <h3>The responses feed</h3>
+  <pre><code>GET /api/slates/nightly/responses?since=42
+→ 200 { "responses": [
+          { "id": 43, "slateId": "nightly", "kind": "answer",
+            "elementId": "q-backup", "questionId": "q-backup",
+            "optionId": "purge", "optionLabel": "Purge",
+            "clientAt": "…", "createdAt": "…", "stale": false } ],
+        "cursor": 43, "hasMore": false }</code></pre>
+  <table>
+    <tr><th>Rule</th><th>Detail</th></tr>
+    <tr><td><code>since</code></td><td>Exclusive — returns <code>id &gt; since</code>; pass <code>0</code> for everything. <code>limit</code> defaults 50, max 200; results ascend by <code>id</code>; if <code>hasMore</code>, poll again with the returned <code>cursor</code></td></tr>
+    <tr><td>Ack</td><td><code>DELETE …/responses?beforeId=cursor</code> deletes <code>id ≤ cursor</code> — ack <strong>after</strong> processing. Never run a bare ack unless you mean to wipe the slate's feed</td></tr>
+    <tr><td>Two id domains</td><td><code>id</code> = server-assigned, one global sequence across slates (your cursor). <code>seq</code> = device-generated idempotency key, deduped per slate</td></tr>
+    <tr><td>Retention</td><td>Last 200 answers per slate, 7-day TTL by default — poll at least daily, or raise the env knobs</td></tr>
+    <tr><td>One poller</td><td>Two agents acking the same slate will eat each other's answers — give each slate one poller, or partition by slate id</td></tr>
+  </table>
+  <h3>Error codes</h3>
+  <table>
+    <tr><th>HTTP</th><th><code>error.code</code></th><th>When</th></tr>
+    <tr><td>400</td><td><code>validation_error</code></td><td>Spec or batch failed schema validation — read <code>hint</code>, fix, retry</td></tr>
+    <tr><td>400</td><td><code>caps_exceeded</code></td><td>Depth &gt; 6 or &gt; 60 elements</td></tr>
+    <tr><td>400</td><td><code>payload_too_large</code></td><td>&gt; 64 KB spec or &gt; 256 KB body</td></tr>
+    <tr><td>400</td><td><code>id_mismatch</code> / <code>invalid_json</code> / <code>invalid_query</code></td><td>Path ≠ body id / malformed JSON / bad cursor or limit</td></tr>
+    <tr><td>401</td><td><code>unauthorized</code></td><td>Missing/wrong Bearer key (identical body for every variant — no probing)</td></tr>
+    <tr><td>404</td><td><code>not_found</code></td><td>Slate doesn't exist (push first)</td></tr>
+  </table>
+  <div class="note">📬 <strong>The agent's poll loop:</strong> <code>GET /api/slates/{id}/responses?since=cursor</code> → process → <code>DELETE …/responses?beforeId=cursor</code>. Persist the cursor across runs. Full details in <a href="https://github.com/NickLewanowicz/slate/blob/main/schema/api.md">schema/api.md</a>.</div>
+</section>
+
+<!-- ===================== EXAMPLES ===================== -->
+<section id="examples">
+  <h2>Examples</h2>
+  <p class="lede">These are the golden fixtures the test suites and the widget's own tests render. Validate any of them: <code>slate.sh validate examples/status-board.json</code></p>
+
+  <h3>Smallest useful slate</h3>
+  <pre><code>{ "id": "meds", "version": 2, "title": "Evening",
+  "children": [ { "type": "text", "text": "💊 Time to take meds — tap to open and log it." } ] }</code></pre>
+
+  <h3>Nightly status board (Loop A)</h3>
+  <pre><code>{ "id": "nightly", "version": 2, "title": "🌙 Nightly", "tone": "warn",
+  "children": [
+    { "type": "statusRow", "icon": "🏠", "label": "Home Assistant", "value": "ok",  "tone": "ok",   "detail": "checked 2m ago" },
+    { "type": "statusRow", "icon": "📧", "label": "Email",          "value": "3 unread", "tone": "info" },
+    { "type": "statusRow", "icon": "🔒", "label": "Security",       "value": "armed", "tone": "ok" },
+    { "type": "statusRow", "icon": "💾", "label": "Backup",         "value": "failed", "tone": "error", "detail": "disk full — 412 GB used" },
+    { "type": "divider" },
+    { "type": "text", "style": "heading", "text": "Before bed" },
+    { "type": "todoList", "id": "bed", "items": [
+      { "id": "doors",  "label": "Lock doors", "checked": true },
+      { "id": "garage", "label": "Close garage" } ] }
+  ] }</code></pre>
+
+  <h3>Decision question (Loop B)</h3>
+  <pre><code>{ "id": "job-alert", "version": 2, "title": "⚠️ CI needs you", "tone": "error",
+  "children": [
+    { "type": "text", "text": "deploy.yml has failed 3× on main.", "maxLines": 2 },
+    { "type": "question", "id": "q-fail",
+      "prompt": "I noticed the deploy job failing. What should I do?",
+      "options": [
+        { "id": "retry", "label": "Retry", "style": "primary" },
+        { "id": "skip",  "label": "Skip this deploy" },
+        { "id": "mute",  "label": "Never ask again", "style": "danger" } ],
+      "allowText": true, "placeholder": "e.g. rotate the token first" } ] }</code></pre>
+
+  <h3>Degrade-don't-crash (forward compat)</h3>
+  <pre><code>{ "id": "future", "version": 2, "title": "Forward compatibility",
+  "children": [
+    { "type": "statusRow", "label": "Known elements still render", "value": "ok", "tone": "ok" },
+    { "type": "carousel", "items": [ { "title": "Something new in spec v3" } ] },
+    { "type": "text", "style": "caption", "text": "Unknown elements degrade to a caption." } ] }</code></pre>
+  <p style="color:var(--muted);font-size:14px">⚠️ This one is <strong>rejected by the backend</strong> (unknown element, with a fix-it hint) but <strong>renders on old devices without crashing</strong> — the two-layer contract: strict for senders, lenient for receivers.</p>
+</section>
+
+<!-- ===================== API ===================== -->
+<section id="api">
+  <h2>HTTP API</h2>
+  <p class="lede">Bearer key on everything except <code>/health</code>. Full request/response pairs live in <code>schema/api.md</code> and <code>docs/API_EXAMPLES.md</code>.</p>
+  <table>
+    <tr><th>Method</th><th>Path</th><th>Who</th><th>Purpose</th></tr>
+    <tr><td>PUT</td><td><code>/api/slates/{id}</code></td><td>agent</td><td>Create / full-replace → <code>{slateId, updatedAt, contentHash, created}</code></td></tr>
+    <tr><td>GET</td><td><code>/api/slates/{id}</code></td><td>agent</td><td>Stored envelope (server-owned todo state applied)</td></tr>
+    <tr><td>DELETE</td><td><code>/api/slates/{id}</code></td><td>agent</td><td>Remove (cascades responses)</td></tr>
+    <tr><td>GET</td><td><code>/api/slates</code></td><td>agent</td><td>List all</td></tr>
+    <tr><td>GET</td><td><code>/api/slates/{id}/responses</code></td><td>agent</td><td>Event feed · <code>?since=&lt;cursor&gt;</code> (exclusive) · <code>?limit=&lt;n&gt;</code></td></tr>
+    <tr><td>DELETE</td><td><code>/api/slates/{id}/responses</code></td><td>agent</td><td>Ack · <code>?beforeId=</code> (inclusive)</td></tr>
+    <tr><td>GET</td><td><code>/api/device/slates</code></td><td>device</td><td>Hash-diff list for cheap sync</td></tr>
+    <tr><td>GET</td><td><code>/api/device/slates/{id}</code></td><td>device</td><td>Fetch with ETag / <code>If-None-Match</code> → 304</td></tr>
+    <tr><td>POST</td><td><code>/api/device/interactions</code></td><td>device</td><td>Batch taps (≤50) · all-or-nothing · seq dedupe</td></tr>
+    <tr><td>GET</td><td><code>/api/ping</code> · <code>/health</code></td><td>both</td><td>Authed liveness · open health check</td></tr>
+  </table>
+  <h3>Errors are for LLMs</h3>
+  <pre><code>HTTP 400
+{ "error": {
+    "code": "validation_error",
+    "message": "children[3].tone: must be one of ok|warn|error|info|neutral",
+    "hint": "\"chartreuse\" is not a valid tone. Valid tones: ok, warn, error, info, neutral.
+             Corrected snippet: { \"tone\": \"warn\" }",
+    "status": 400 } }</code></pre>
+  <h3>Webhook wake</h3>
+  <p style="color:var(--muted);font-size:14.5px">Set <code>SLATE_WEBHOOK_URL</code> (+ optional <code>SLATE_WEBHOOK_SECRET</code>) and every new interaction POSTs <code>{"type":"interactions","slateId":…,"interactions":[…]}</code> with <code>X-Slate-Signature: sha256=HMAC(body)</code>. Retried 2s/8s/30s; polling stays the source of truth.</p>
+</section>
+
+<section id="agent-setup">
+  <h2>Set it up with your agent</h2>
+  <p class="lede">Slate is built to be installed <em>by an AI agent</em>. Paste this into the agent that runs your home lab (OpenClaw, Hermes, anything with shell + Docker). It asks once for the values it needs, gates every step, and never deletes data on its own.</p>
+  <pre><code>Deploy Slate (home-screen widget service my agent pushes to) on this
+home server. Work step by step. STOP and report if any gate fails.
+
+Inputs — ask me once, then reuse:
+  REPO_URL   = https://github.com/NickLewanowicz/slate
+  SLATE_HOST = &lt;hostname or LAN IP for the backend&gt;
+  PORT       = 3000
+  SKILLS_DIR = &lt;your skills directory, e.g. ~/.openclaw/skills&gt;
+
+1) BACKEND
+   git clone "$REPO_URL" && cd slate/backend
+   cp .env.example .env
+   echo "SLATE_API_KEY=$(openssl rand -hex 24)" >> .env
+   docker compose up -d --build
+   GATE 1: curl -sf http://SLATE_HOST:PORT/health → {"status":"ok"}
+   GATE 2: curl -sf -H "Authorization: Bearer $(grep SLATE_API_KEY .env | cut -d= -f2)" \
+           http://SLATE_HOST:PORT/api/ping → "ok":true
+   On failure: read `docker compose logs`, fix or report. Do not continue.
+
+2) SKILL
+   cp -R ../skill/slate "$SKILLS_DIR/slate"
+   export SLATE_URL=http://SLATE_HOST:PORT
+   export SLATE_API_KEY=&lt;key from step 1&gt;
+   GATE 3: slate.sh ping → ok
+   Smoke test: slate.sh validate ../examples/agent-setup/home-board.json
+               slate.sh push ../examples/agent-setup/home-board.json home
+               slate.sh responses home      <span class="c"># empty is fine</span>
+
+3) PHONE
+   Tell me to install the Slate Android app (release page) and pair it to
+   http://SLATE_HOST:PORT with the same key. WAIT for my confirmation that
+   the widget renders before declaring success.
+
+4) REPORT: backend URL, where the API key is stored (not its value), skill
+   path, and the poll loop (responses → process → ack with the cursor).
+   RULE ZERO: after pushing a question, end your turn. Never block waiting
+   for an answer — pick answers up on the next poll or webhook.
+
+ROLLBACK — only when I say "roll back Slate":
+   docker compose down && rm -rf "$SKILLS_DIR/slate". Confirm both are
+   gone and report. NEVER delete the SQLite data directory unless I say so.</code></pre>
+  <p style="color:var(--muted);font-size:14px">Prefer doing it yourself? The same steps in human form are in <a href="https://github.com/NickLewanowicz/slate#quick-start">Getting started</a> above, with full deployment notes (env vars, retention, webhook) in the Backend step.</p>
+</section>
+
+<!-- ===================== QUALITY ===================== -->
+<section id="quality">
+  <h2>Quality</h2>
+  <p class="lede">The rewrite was driven by a twelve-persona design review (homelab operator, attack-minded self-hoster, accessibility, anti-spam skeptic, a live OpenClaw instance, and more) and verified on-device end to end.</p>
+  <div class="metrics">
+    <div class="metric"><b>105</b><span>backend tests · 99.66% branch</span></div>
+    <div class="metric"><b>75/75</b><span>e2e checks incl. webhook + skill smoke</span></div>
+    <div class="metric"><b>179</b><span>Android tests · 83.55% branch (Kover)</span></div>
+    <div class="metric"><b>3</b><span>golden loops proven with a live agent</span></div>
+  </div>
+  <p style="color:var(--muted);font-size:14.5px;margin-top:16px">Notable catches from that process, all fixed with regression tests: an exponential validation blow-up (a 1 KB nesting bomb wedged the server — caps now enforced pre-parse), ack off-by-one semantics that would redeliver answers forever, a wire field the strict schema rejected (silently killing every device flush), and RemoteViews slots that stacked old renders.</p>
+</section>
+
+<!-- ===================== ROADMAP ===================== -->
+<section id="roadmap">
+  <h2>Roadmap</h2>
+  <table>
+    <tr><th>Next</th><th>What</th></tr>
+    <tr><td><code>x-*</code> extensions</td><td>Reserved prop namespace so forks can push additive data through old backends</td></tr>
+    <tr><td>Per-widget slate picker</td><td>Bind any widget instance to any slate (today: <code>home</code>)</td></tr>
+    <tr><td>Widget height axis</td><td>Fill leftover cell height by priority: question → todos → rows</td></tr>
+    <tr><td>Mute registry + per-question expiry</td><td>Server-side "never ask again" state; independent question TTLs</td></tr>
+    <tr><td>Notifications + direct reply</td><td>Questions notify; answer from the shade</td></tr>
+  </table>
+  <p style="color:var(--faint);font-size:13.5px;margin-top:14px">Full list: <a href="https://github.com/NickLewanowicz/slate/blob/main/CHANGELOG.md">CHANGELOG.md</a></p>
+</section>
+
+<footer>
+  Slate v2 · built for <strong>OpenClaw</strong>, usable by any agent · backend Bun + Elysia + SQLite · widget Kotlin + RemoteViews · app Compose + Material 3<br>
+  Repo: <a href="https://github.com/NickLewanowicz/slate">github.com/NickLewanowicz/slate</a>
+· <a href="https://github.com/NickLewanowicz/slate/blob/main/CONTRIBUTING.md">Contributing</a>
+· <a href="https://github.com/NickLewanowicz/slate/blob/main/SECURITY.md">Security</a>
+· <a href="https://github.com/NickLewanowicz/slate/blob/main/CODE_OF_CONDUCT.md">Conduct</a>
+· <a href="https://github.com/NickLewanowicz/slate/blob/main/CHANGELOG.md">Changelog</a>
+· <a href="https://github.com/NickLewanowicz/slate/blob/main/LICENSE">MIT License</a>
+· Contract: <a href="https://github.com/NickLewanowicz/slate/blob/main/schema/api.md"><code>schema/api.md</code></a>
+</footer>
+</main>
+</div>
+
+<script>
+// ---- JSON syntax highlighting (tiny, dependency-free) ----
+function hl(pre){
+  const code = pre.querySelector('code'); if(!code) return;
+  let h = code.innerHTML;
+  // comments first (// and //) — protect via placeholder
+  h = h.replace(/(<span class="c">)(.*?)(<\/span>)/gs, m => m.replace(/"/g,'\u0001').replace(/:/g,'\u0002'));
+  h = h.replace(/"([^"]*)"(\s*:)/g, '<span class="k">"$1"</span>$2');           // keys
+  h = h.replace(/:\s*"([^"]*)"/g, ': <span class="s">"$1"</span>');             // string values
+  h = h.replace(/:\s*(true|false|null)/g, ': <span class="b">$1</span>');       // bools/null
+  h = h.replace(/:\s*(-?\d+(?:\.\d+)?)/g, ': <span class="n">$1</span>');       // numbers
+  // restore protected comment spans
+  h = h.replace(/\u0001/g,'"').replace(/\u0002/g,':');
+  code.innerHTML = h;
+}
+document.querySelectorAll('pre').forEach(pre=>{
+  hl(pre);
+  // copy button
+  const btn = document.createElement('button');
+  btn.className='copy'; btn.textContent='copy';
+  btn.onclick=()=>{ navigator.clipboard.writeText(pre.querySelector('code').innerText).then(()=>{btn.textContent='copied ✓'; setTimeout(()=>btn.textContent='copy',1400);}); };
+  pre.appendChild(btn);
+});
+// ---- scrollspy ----
+const links=[...document.querySelectorAll('#nav a')];
+const targets=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const spy=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){
+    links.forEach(l=>l.classList.toggle('active', l.getAttribute('href')==='#'+e.target.id));
+  }});
+},{rootMargin:'-15% 0px -70% 0px'});
+targets.forEach(t=>spy.observe(t));
+</script>
+<style>
+  pre code .k{color:#7dc4ff} pre code .s{color:#a5d6a7} pre code .n{color:#f0c674} pre code .b{color:#d78fdd}
+  pre code .c, .c{color:#5b6a85;font-style:italic}
+</style>
+</body>
+</html>

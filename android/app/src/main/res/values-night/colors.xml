@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget chrome, dark theme -->
+    <color name="widget_bg">#1C1C1E</color>
+    <color name="widget_text_primary">#FFFFFF</color>
+    <color name="widget_text_secondary">#98989F</color>
+    <color name="widget_divider">#54545880</color>
+    <color name="widget_option_quiet_bg">#2C2C2E</color>
+    <color name="widget_option_quiet_stroke">#54545899</color>
+</resources>

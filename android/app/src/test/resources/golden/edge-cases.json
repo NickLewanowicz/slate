@@ -1,0 +1,49 @@
+{
+  "id": "edge",
+  "version": 2,
+  "title": "Edge cases: long strings, every tone, all styles",
+  "tone": "info",
+  "expiresAt": "2026-12-31T23:59:59Z",
+  "children": [
+    { "type": "text", "text": "title style: the quick brown fox jumps over the lazy dog and keeps going well past a single line to prove truncation", "style": "title" },
+    { "type": "spacer", "height": 16 },
+
+    { "type": "text", "text": "ok tone text", "tone": "ok" },
+    { "type": "text", "text": "warn tone text", "tone": "warn" },
+    { "type": "text", "text": "error tone text", "tone": "error" },
+    { "type": "text", "text": "info tone text", "tone": "info" },
+    { "type": "divider", "inset": true },
+    {
+      "type": "row",
+      "gravity": "spaceBetween",
+      "children": [
+        { "type": "text", "text": "left" },
+        { "type": "text", "text": "right", "tone": "info" }
+      ]
+    },
+    { "type": "progress", "indeterminate": true, "label": "Working…" },
+    { "type": "progress", "value": 100, "label": "Full", "tone": "ok" },
+    {
+      "type": "todoList",
+      "id": "edge-todo",
+      "items": [
+        { "id": "a", "label": "Unchecked item with a fairly long label that should ellipsize gracefully on narrow widget sizes" },
+        { "id": "b", "label": "Checked item", "checked": true },
+        { "id": "c", "label": "Warn item", "tone": "warn" }
+      ]
+    },
+    {
+      "type": "question",
+      "id": "edge-q",
+      "prompt": "Six options, all styles, no text allowed",
+      "options": [
+        { "id": "o1", "label": "Primary", "style": "primary" },
+        { "id": "o2", "label": "Danger", "style": "danger" },
+        { "id": "o3", "label": "Quiet one" },
+        { "id": "o4", "label": "Quiet two" },
+        { "id": "o5", "label": "Quiet three" },
+        { "id": "o6", "label": "Quiet four" }
+      ]
+    }
+  ]
+}

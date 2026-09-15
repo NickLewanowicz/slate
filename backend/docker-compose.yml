@@ -1,0 +1,26 @@
+# Slate v2 backend stack. The build context is the repo root so the
+# Dockerfile can COPY schema/*.json. Compose auto-loads backend/.env
+# (copy backend/.env.example to backend/.env and set SLATE_API_KEY).
+services:
+  slate-backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    image: slate-backend:2.0.0
+    container_name: slate-backend
+    ports:
+      - "${SLATE_PORT:-3000}:3000"
+    environment:
+      # Required — boot fails without it.
+      SLATE_API_KEY: ${SLATE_API_KEY:?set SLATE_API_KEY in backend/.env}
+      SLATE_DB_PATH: /data/slate.db
+      # Optional wake path (HMAC-signed with SLATE_WEBHOOK_SECRET when set).
+      SLATE_WEBHOOK_URL: ${SLATE_WEBHOOK_URL:-}
+      SLATE_WEBHOOK_SECRET: ${SLATE_WEBHOOK_SECRET:-}
+      SLATE_MAX_RESPONSES_PER_SLATE: ${SLATE_MAX_RESPONSES_PER_SLATE:-200}
+      SLATE_RESPONSE_TTL_HOURS: ${SLATE_RESPONSE_TTL_HOURS:-168}
+      SLATE_LOG_LEVEL: ${SLATE_LOG_LEVEL:-info}
+    volumes:
+      # Keep ./data writable by uid 1000 (the container runs as the non-root bun user).
+      - ./data:/data
+    restart: unless-stopped

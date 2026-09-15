@@ -1,0 +1,22 @@
+name: backend
+on:
+  push:
+    paths: ["backend/**", "schema/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", "schema/**", ".github/workflows/backend.yml"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - name: Install dependencies
+        working-directory: backend
+        run: bun install
+      - name: Typecheck
+        working-directory: backend
+        run: bun run typecheck
+      - name: Test + coverage (>=80% branch enforced)
+        working-directory: backend
+        run: bun run coverage

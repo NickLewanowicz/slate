@@ -1,0 +1,8 @@
+{
+  "id": "meds",
+  "version": 2,
+  "title": "Evening",
+  "children": [
+    { "type": "text", "text": "💊 Time to take meds — tap to open and log it." }
+  ]
+}

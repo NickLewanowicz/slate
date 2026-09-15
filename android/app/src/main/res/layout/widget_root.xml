@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Widget root. Structure:
+    accent bar → header fragment → body fragments (before first todoList)
+    → todoList ListView (full bucket only, fixed-height rows)
+    → body fragments (after the todoList).
+  The ListView lives at the ROOT RemoteViews level: adapter-backed collections
+  must not be nested inside fragments added via addView().
+  All accents/dots are FrameLayouts — bare <View> is forbidden in RemoteViews.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <FrameLayout
+        android:id="@+id/widget_accent_bar"
+        android:layout_width="28dp"
+        android:layout_height="3dp" />
+
+    <LinearLayout
+        android:id="@+id/widget_header_slot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <!--
+      Body is a FrameLayout wrapper around a vertical stack: body fragments are
+      added/removed via widget_body_stack; the wrapper keeps the body a single
+      FrameLayout container (accent dots and slots in RemoteViews must be
+      FrameLayouts, never bare Views).
+    -->
+    <FrameLayout
+        android:id="@+id/widget_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:id="@+id/widget_body_stack"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </FrameLayout>
+
+    <ListView
+        android:id="@+id/widget_todo_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/widget_body_after"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+</LinearLayout>

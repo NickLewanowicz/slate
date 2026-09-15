@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One row of two question option buttons (2 per row). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/widget_option_left"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:paddingLeft="6dp"
+        android:paddingTop="14dp"
+        android:paddingRight="6dp"
+        android:paddingBottom="14dp"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/widget_option_right"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:paddingLeft="6dp"
+        android:paddingTop="14dp"
+        android:paddingRight="6dp"
+        android:paddingBottom="14dp"
+        android:textSize="12sp" />
+</LinearLayout>

@@ -1,0 +1,8 @@
+# Bun runtime config for the Slate v2 backend.
+# Coverage thresholds (branch >= 80%) are enforced by `bun run coverage`
+# -> scripts/check-coverage.mjs (Bun 1.3.x emits no BRDA branch records;
+#    the script parses them when a future Bun does).
+
+[test]
+coverageDir = "coverage"
+coverageReporter = ["text", "lcov"]

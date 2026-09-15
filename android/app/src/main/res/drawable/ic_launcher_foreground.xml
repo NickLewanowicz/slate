@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple slate card glyph: a rounded card with an accent bar and rows. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,34 h48 a6,6 0 0 1 6,6 v28 a6,6 0 0 1 -6,6 h-48 a6,6 0 0 1 -6,-6 v-28 a6,6 0 0 1 6,-6 z" />
+    <path
+        android:fillColor="#0A84FF"
+        android:pathData="M30,40 h20 a2,2 0 0 1 2,2 v2 a2,2 0 0 1 -2,2 h-20 a2,2 0 0 1 -2,-2 v-2 a2,2 0 0 1 2,-2 z" />
+    <path
+        android:fillColor="#C7C7CC"
+        android:pathData="M30,50 h48 a2,2 0 0 1 2,2 v2 a2,2 0 0 1 -2,2 h-48 a2,2 0 0 1 -2,-2 v-2 a2,2 0 0 1 2,-2 z" />
+    <path
+        android:fillColor="#34C759"
+        android:pathData="M38,62 h16 a2,2 0 0 1 2,2 v2 a2,2 0 0 1 -2,2 h-16 a2,2 0 0 1 -2,-2 v-2 a2,2 0 0 1 2,-2 z" />
+</vector>

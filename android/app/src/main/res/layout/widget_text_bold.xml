@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bold text variant (title style); keeps the same view id for RemoteViews actions. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_text"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:ellipsize="end"
+    android:textColor="@color/widget_text_primary"
+    android:textSize="20sp"
+    android:textStyle="bold" />

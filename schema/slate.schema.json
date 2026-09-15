@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slate.example.com/schemas/v2/slate.json",
+  "title": "Slate Spec v2",
+  "description": "Declarative payload an AI agent pushes to a Slate surface. Semantic (tone/style enums), never visual (no raw colors). Renderers degrade unknown content to text, never crash.",
+  "type": "object",
+  "required": ["id", "version", "children"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/slug", "description": "Stable slate slug, e.g. 'home'. All interactions carry it." },
+    "version": { "const": 2 },
+    "title": { "type": "string", "maxLength": 60, "default": "", "description": "Header line of the surface." },
+    "tone": { "$ref": "#/$defs/tone", "default": "neutral", "description": "Surface accent: header rule, progress fills, primary option styling." },
+    "updatedAt": { "$ref": "#/$defs/iso", "description": "Server-stamped on PUT if omitted; agents should not send it." },
+    "expiresAt": { "$ref": "#/$defs/iso", "description": "After this instant the surface renders greyed with a 'stale' badge; answers still recorded but marked stale." },
+    "children": { "$ref": "#/$defs/elements", "description": "Root column body. Max depth 6, max 60 total elements, max 12 per container." }
+  },
+  "$defs": {
+    "tone": { "enum": ["ok", "warn", "error", "info", "neutral"], "default": "neutral" },
+    "iso": { "type": "string", "format": "date-time", "maxLength": 32 },
+    "slug": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,39}$" },
+    "elements": { "type": "array", "maxItems": 12, "items": { "$ref": "#/$defs/element" } },
+    "element": {
+      "oneOf": [
+        { "$ref": "#/$defs/column" },
+        { "$ref": "#/$defs/row" },
+        { "$ref": "#/$defs/text" },
+        { "$ref": "#/$defs/statusRow" },
+        { "$ref": "#/$defs/todoList" },
+        { "$ref": "#/$defs/question" },
+        { "$ref": "#/$defs/progress" },
+        { "$ref": "#/$defs/divider" },
+        { "$ref": "#/$defs/spacer" }
+      ]
+    },
+    "column": {
+      "type": "object",
+      "required": ["type", "children"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "column" },
+        "id": { "$ref": "#/$defs/slug" },
+        "children": { "$ref": "#/$defs/elements" },
+        "gap": { "type": "integer", "minimum": 0, "maximum": 24, "default": 8, "description": "dp between children" },
+        "padding": { "type": "integer", "minimum": 0, "maximum": 24, "default": 0, "description": "dp; root column defaults to 16" },
+        "align": { "enum": ["start", "center", "end"], "default": "start" }
+      }
+    },
+    "row": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "row" },
+        "id": { "$ref": "#/$defs/slug" },
+        "children": { "$ref": "#/$defs/elements" },
+        "gap": { "type": "integer", "minimum": 0, "maximum": 24, "default": 8 },
+        "gravity": { "enum": ["start", "center", "end", "spaceBetween"], "default": "start", "description": "The last text child stretches and ellipsizes." }
+      }
+    },
+    "text": {
+      "type": "object",
+      "required": ["type", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "text" },
+        "id": { "$ref": "#/$defs/slug" },
+        "text": { "type": "string", "maxLength": 500 },
+        "style": { "enum": ["title", "heading", "body", "caption"], "default": "body", "description": "title=20sp bold 1 line, heading=16sp medium 2 lines, body=14sp 3 lines, caption=12sp 1 line" },
+        "tone": { "$ref": "#/$defs/tone" },
+        "maxLines": { "type": "integer", "minimum": 1, "maximum": 10 }
+      }
+    },
+    "statusRow": {
+      "type": "object",
+      "required": ["type", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "statusRow" },
+        "id": { "$ref": "#/$defs/slug" },
+        "icon": { "type": "string", "maxLength": 4, "default": "•", "description": "Emoji or single glyph. Never a font/drawable name." },
+        "label": { "type": "string", "maxLength": 80 },
+        "value": { "type": "string", "maxLength": 80, "description": "Right-aligned, tone-colored, e.g. '3 unread'." },
+        "tone": { "$ref": "#/$defs/tone" },
+        "detail": { "type": "string", "maxLength": 160, "description": "Second caption line, e.g. 'checked 2m ago'." }
+      }
+    },
+    "todoList": {
+      "type": "object",
+      "required": ["type", "id", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "todoList" },
+        "id": { "$ref": "#/$defs/slug", "description": "REQUIRED: echoed in check/uncheck events." },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "$ref": "#/$defs/slug" },
+              "label": { "type": "string", "maxLength": 120 },
+              "checked": { "type": "boolean", "default": false },
+              "tone": { "$ref": "#/$defs/tone" }
+            }
+          }
+        }
+      }
+    },
+    "question": {
+      "type": "object",
+      "required": ["type", "id", "prompt", "options"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "question" },
+        "id": { "$ref": "#/$defs/slug", "description": "REQUIRED: echoed as questionId in answer events." },
+        "prompt": { "type": "string", "maxLength": 300 },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "$ref": "#/$defs/slug" },
+              "label": { "type": "string", "maxLength": 40 },
+              "style": { "enum": ["primary", "danger", "quiet"], "default": "quiet" }
+            }
+          }
+        },
+        "allowText": { "type": "boolean", "default": false, "description": "Adds a free-text reply affordance; input happens in the companion app (widgets cannot host text fields)." },
+        "placeholder": { "type": "string", "maxLength": 80, "default": "Type a reply…", "description": "APP-ONLY. The widget shows a 'reply in app' row instead." }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "progress" },
+        "id": { "$ref": "#/$defs/slug" },
+        "value": { "type": "number", "minimum": 0, "maximum": 100, "description": "Percent; required unless indeterminate." },
+        "indeterminate": { "type": "boolean", "default": false },
+        "label": { "type": "string", "maxLength": 80 },
+        "tone": { "$ref": "#/$defs/tone" }
+      }
+    },
+    "divider": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "divider" },
+        "id": { "$ref": "#/$defs/slug" },
+        "inset": { "type": "boolean", "default": false }
+      }
+    },
+    "spacer": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "spacer" },
+        "id": { "$ref": "#/$defs/slug" },
+        "height": { "type": "integer", "minimum": 2, "maximum": 48, "default": 8, "description": "dp" }
+      }
+    }
+  }
+}

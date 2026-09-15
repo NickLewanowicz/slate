@@ -1,0 +1,39 @@
+{
+  "id": "home",
+  "version": 2,
+  "title": "🏠 Home",
+  "tone": "info",
+  "children": [
+    {
+      "type": "statusRow",
+      "icon": "🏠",
+      "label": "Home Assistant",
+      "value": "ok",
+      "tone": "ok"
+    },
+    {
+      "type": "statusRow",
+      "icon": "💾",
+      "label": "Backup",
+      "value": "ok",
+      "tone": "ok",
+      "detail": "finished 02:00"
+    },
+    {
+      "type": "question",
+      "id": "q-demo",
+      "prompt": "Run the weekly cleanup now?",
+      "options": [
+        {
+          "id": "yes",
+          "label": "Run it",
+          "style": "primary"
+        },
+        {
+          "id": "no",
+          "label": "Later"
+        }
+      ]
+    }
+  ]
+}
