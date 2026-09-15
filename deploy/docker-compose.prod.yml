@@ -1,0 +1,25 @@
+# Slate v2 — production stack for the tower (Unraid).
+# Build context is the REPO ROOT (backend Dockerfile copies schema/).
+services:
+  slate-backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    image: slate-backend:v2
+    container_name: slate-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SLATE_PORT: "3000"
+      SLATE_DB_PATH: /data/slate.db
+    volumes:
+      - ./data:/data
+    networks: [proxynet]
+    labels:
+      caddy: http://slate.example.com
+      caddy.reverse_proxy: "{{upstreams 3000}}"
+
+networks:
+  proxynet:
+    external: true

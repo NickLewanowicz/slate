@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Weight-1 flex spacer for spaceBetween rows. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_hspacer"
+    android:layout_width="0dp"
+    android:layout_height="1dp"
+    android:layout_weight="1" />

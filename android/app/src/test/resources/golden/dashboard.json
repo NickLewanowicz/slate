@@ -1,0 +1,31 @@
+{
+  "id": "dash",
+  "version": 2,
+  "title": "🌤 Morning brief",
+  "tone": "info",
+  "children": [
+    {
+      "type": "row",
+      "gravity": "start",
+      "children": [
+        { "type": "text", "text": "18° · Partly cloudy · High 23°", "style": "heading" }
+      ]
+    },
+    { "type": "progress", "label": "Commute traffic — light", "value": 22, "tone": "ok" },
+    { "type": "divider" },
+    { "type": "statusRow", "icon": "📅", "label": "Next up", "value": "Standup 9:15", "tone": "info", "detail": "3 events today" },
+    { "type": "statusRow", "icon": "💸", "label": "Budget", "value": "78% used", "tone": "warn" },
+    { "type": "progress", "label": "Budget burn", "value": 78, "tone": "warn" },
+    { "type": "divider" },
+    { "type": "text", "text": "Today's focus", "style": "heading" },
+    {
+      "type": "todoList",
+      "id": "focus",
+      "items": [
+        { "id": "review", "label": "Review Slate v2 spec", "checked": true },
+        { "id": "call", "label": "Call plumber", "tone": "warn" },
+        { "id": "gym", "label": "Gym before 18:00" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "job-alert",
+  "version": 2,
+  "title": "⚠️ CI needs you",
+  "tone": "error",
+  "children": [
+    { "type": "text", "text": "deploy.yml has failed 3× on main (last: 401 on registry push).", "maxLines": 2 },
+    {
+      "type": "question",
+      "id": "q-fail",
+      "prompt": "I noticed the deploy job failing. What should I do?",
+      "options": [
+        { "id": "retry", "label": "Retry", "style": "primary" },
+        { "id": "skip", "label": "Skip this deploy" },
+        { "id": "more", "label": "Tell me more" },
+        { "id": "mute", "label": "Never ask again", "style": "danger" }
+      ],
+      "allowText": true,
+      "placeholder": "e.g. rotate the token first"
+    }
+  ]
+}

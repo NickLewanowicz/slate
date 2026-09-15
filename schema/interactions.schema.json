@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slate.example.com/schemas/v2/interactions.json",
+  "title": "Slate Interactions v2",
+  "description": "What the device sends when the user taps. One batch per flush; seq is the idempotency key.",
+  "type": "object",
+  "required": ["interactions"],
+  "additionalProperties": false,
+  "properties": {
+    "interactions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/interaction" }
+    }
+  },
+  "$defs": {
+    "interaction": {
+      "type": "object",
+      "required": ["seq", "slateId", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "seq": { "type": "string", "maxLength": 64, "description": "Client-generated unique id (e.g. uuid). Server dedupes on it. Never reuse after a 2xx." },
+        "slateId": { "$ref": "slate.json#/$defs/slug" },
+        "kind": { "enum": ["answer", "check", "uncheck", "text", "tap"] },
+        "elementId": { "type": "string", "maxLength": 40, "description": "The question id (answer/text) or todoList id (check/uncheck) that was tapped." },
+        "questionId": { "type": "string", "maxLength": 40, "description": "answer/text only: the question element id." },
+        "optionId": { "type": "string", "maxLength": 40, "description": "answer only: the chosen option id." },
+        "optionLabel": { "type": "string", "maxLength": 40, "description": "answer only: convenience echo of the option label so the agent needs no lookup." },
+        "itemId": { "type": "string", "maxLength": 40, "description": "check/uncheck only: the todo item id." },
+        "value": { "type": "string", "maxLength": 1000, "description": "text only: the free-text string the user typed." },
+        "clientAt": { "type": "string", "format": "date-time", "description": "When the tap happened on-device (may predate server receipt if queued offline)." }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Slate</string>
+    <string name="widget_description">Status and questions from your agents</string>
+
+    <!-- Empty / loading states with personality -->
+    <string name="empty_slates_title">All quiet.</string>
+    <string name="empty_slates_body">Your agents have nothing to report — enjoy it.</string>
+    <string name="widget_empty">All quiet. Your agents have nothing to report — enjoy it.</string>
+    <string name="widget_waiting">Waiting for first sync…\nOpen Slate to set up.</string>
+    <string name="widget_no_slate">Slate “home” isn’t on the server yet.</string>
+    <string name="widget_stale_badge">stale</string>
+    <string name="widget_reply_in_app">💬 Reply in app</string>
+    <string name="widget_freshness_unavailable">updated unknown</string>
+</resources>

@@ -1,0 +1,77 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Node/Bun
+node_modules/
+bun.lockb
+.pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# === Android ===
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Android Studio
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+local.properties
+captures/
+*.hprof
+
+# NDK
+obj/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+*.kotlin_module
+
+# === Backend ===
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+!.dockerignore
+
+# === Skill outputs ===
+qa-results/
+qa-screenshots/
+debug-logs/
+
+# SQLite WAL/SHM (runtime files)
+*.db-shm
+*.db-wal

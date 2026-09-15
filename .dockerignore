@@ -1,0 +1,42 @@
+# Keeps the production image build context lean.
+# The build context is the REPO ROOT (docker build -f backend/Dockerfile . ;
+# see backend/docker-compose.yml and deploy/docker-compose.prod.yml).
+#
+# backend/Dockerfile COPYs ONLY the paths below — nothing excluded here is
+# referenced by any COPY (verified line-by-line against backend/Dockerfile):
+#   COPY backend/package.json backend/bun.lock ./
+#   COPY backend/src ./src
+#   COPY backend/migrations ./migrations
+#   COPY schema/slate.schema.json schema/interactions.schema.json ./schema/
+
+# VCS, CI, editor config
+.git
+.gitea
+.claude
+.cursor
+
+# Android app, docs, QA harness, skill, tooling — not part of the image
+android/
+qa/
+qa-screenshots/
+docs/
+skill/
+scripts/
+deploy/
+
+# Backend dev/runtime artifacts
+backend/node_modules
+backend/tests
+backend/coverage
+backend/data
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+backend/bun.lockb
+
+# Secrets and local env files — never sent to the daemon
+**/.env
+.env.*
+
+# Documentation only; no COPY references any .md file
+**/*.md

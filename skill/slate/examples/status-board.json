@@ -1,0 +1,22 @@
+{
+  "id": "nightly",
+  "version": 2,
+  "title": "🌙 Nightly",
+  "tone": "warn",
+  "children": [
+    { "type": "statusRow", "icon": "🏠", "label": "Home Assistant", "value": "ok", "tone": "ok", "detail": "checked 2m ago" },
+    { "type": "statusRow", "icon": "📧", "label": "Email", "value": "3 unread", "tone": "info" },
+    { "type": "statusRow", "icon": "🔒", "label": "Security", "value": "armed", "tone": "ok" },
+    { "type": "statusRow", "icon": "💾", "label": "Backup", "value": "failed", "tone": "error", "detail": "disk full — 412 GB used" },
+    { "type": "divider" },
+    { "type": "text", "text": "Before bed", "style": "heading" },
+    {
+      "type": "todoList",
+      "id": "bed",
+      "items": [
+        { "id": "doors", "label": "Lock doors", "checked": true },
+        { "id": "garage", "label": "Close garage" }
+      ]
+    }
+  ]
+}
