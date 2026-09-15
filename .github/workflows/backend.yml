@@ -1,5 +1,6 @@
 name: backend
 on:
+  workflow_dispatch:
   push:
     paths: ["backend/**", "schema/**", ".github/workflows/backend.yml"]
   pull_request:

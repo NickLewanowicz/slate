@@ -1,5 +1,6 @@
 name: android
 on:
+  workflow_dispatch:
   push:
     paths: ["android/**", "schema/**", ".github/workflows/android.yml"]
   pull_request:
